@@ -19,14 +19,14 @@ To set up `reconftw_visualize`, follow these general steps. Specific instruction
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/your-username/reconftw_visualize.git
+    git clone https://github.com/n00bpr0gram3r/reconftw_visualize.git
     cd reconftw_visualize
     ```
 
 2.  **Frontend Setup**:
     - Navigate to the `frontend/` directory:
       ```bash
-      cd frontend
+      cd backend
       ```
     - Install frontend dependencies (e.g., Node.js and npm/yarn are required):
       ```bash
