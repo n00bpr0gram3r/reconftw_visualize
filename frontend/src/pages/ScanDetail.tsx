@@ -1,29 +1,41 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, type ReactNode, type SyntheticEvent } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Typography, Box, CircularProgress, Grid, Card, CardContent, CardMedia, List, ListItem, ListItemText, Tabs, Tab, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, TableSortLabel, FormControl, InputLabel, Select, MenuItem, OutlinedInput, Checkbox } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import {
+  Container,
+  Typography,
+  Box,
+  CircularProgress,
+  Card,
+  CardContent,
+  CardMedia,
+  List,
+  ListItem,
+  ListItemText,
+  Tabs,
+  Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  TableSortLabel,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  OutlinedInput,
+  Checkbox,
+  Chip,
+  Stack,
+  type SelectChangeEvent,
+} from '@mui/material';
 import { fetchSubdomains, fetchHosts, fetchVulnerabilities, fetchOsint, fetchPorts } from '../services/api';
 import type { HostData, VulnerabilityData, OsintData, PortData } from '../services/api';
 
 type Order = 'asc' | 'desc';
-
-function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
-  if (b[orderBy] < a[orderBy]) {
-    return -1;
-  }
-  if (b[orderBy] > a[orderBy]) {
-    return 1;
-  }
-  return 0;
-}
-
-function getComparator<Key extends keyof any>(
-  order: Order,
-  orderBy: Key,
-): (a: { [key in Key]: number | string }, b: { [key in Key]: number | string }) => number {
-  return order === 'desc'
-    ? (a, b) => descendingComparator(a, b, orderBy)
-    : (a, b) => -descendingComparator(a, b, orderBy);
-}
 
 function stableSort<T>(array: readonly T[], comparator: (a: T, b: T) => number) {
   const stabilizedThis = array.map((el, index) => [el, index] as [T, number]);
@@ -37,8 +49,17 @@ function stableSort<T>(array: readonly T[], comparator: (a: T, b: T) => number) 
   return stabilizedThis.map((el) => el[0]);
 }
 
+const getPortComparator = (order: Order, orderBy: keyof PortData) => (a: PortData, b: PortData) => {
+  const valueA = String(a[orderBy] ?? '');
+  const valueB = String(b[orderBy] ?? '');
+  if (order === 'desc') {
+    return valueB.localeCompare(valueA, undefined, { numeric: true, sensitivity: 'base' });
+  }
+  return valueA.localeCompare(valueB, undefined, { numeric: true, sensitivity: 'base' });
+};
+
 interface TabPanelProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   index: number;
   value: number;
 }
@@ -74,6 +95,21 @@ function ScanDetail() {
   const [error, setError] = useState<string | null>(null);
   const [tabValue, setTabValue] = useState(0);
 
+  const getSeverityColor = (severity: string) => {
+    switch (severity.toLowerCase()) {
+      case 'critical':
+        return 'error';
+      case 'high':
+        return 'warning';
+      case 'medium':
+        return 'info';
+      case 'low':
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+
   // State for vulnerabilities table sorting
   const [vulnOrder, setVulnOrder] = useState<Order>('asc');
   const [vulnOrderBy, setVulnOrderBy] = useState<keyof VulnerabilityData['info'] | 'template-id' | 'matched-at'>('severity');
@@ -83,7 +119,7 @@ function ScanDetail() {
   const [portsOrderBy, setPortsOrderBy] = useState<keyof PortData>('portid');
   const [selectedPorts, setSelectedPorts] = useState<string[]>([]);
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+  const handleTabChange = (_event: SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
@@ -99,13 +135,9 @@ function ScanDetail() {
     setPortsOrderBy(property);
   };
 
-  const handleSelectedPortsChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const {
-      target: { value },
-    } = event;
-    setSelectedPorts(
-      typeof value === 'string' ? value.split(',') : value as string[],
-    );
+  const handleSelectedPortsChange = (event: SelectChangeEvent<string[]>) => {
+    const { value } = event.target;
+    setSelectedPorts(typeof value === 'string' ? value.split(',') : value);
   };
 
   const renderDork = (dork: string) => {
@@ -144,10 +176,10 @@ function ScanDetail() {
   }, [ports]);
 
   const filteredAndSortedPorts = useMemo(() => {
-    const filtered = selectedPorts.length === 0 
-      ? ports 
+    const filtered = selectedPorts.length === 0
+      ? ports
       : ports.filter(p => selectedPorts.includes(p.portid));
-    return stableSort(filtered, getComparator(portsOrder, portsOrderBy));
+    return stableSort(filtered, getPortComparator(portsOrder, portsOrderBy));
   }, [ports, portsOrder, portsOrderBy, selectedPorts]);
   
   useEffect(() => {
@@ -197,11 +229,33 @@ function ScanDetail() {
     );
   }
 
+  const summaryItems = useMemo(() => ([
+    { label: 'Hosts', value: hosts.length },
+    { label: 'Subdomains', value: subdomains.length },
+    { label: 'Vulnerabilities', value: vulnerabilities.length },
+    { label: 'Ports', value: ports.length },
+  ]), [hosts.length, subdomains.length, vulnerabilities.length, ports.length]);
+
   return (
-    <Box sx={{ p: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
+    <Container maxWidth="lg" sx={{ py: 5 }}>
+      <Typography variant="h4" component="h1" gutterBottom fontWeight={700}>
         Scan Details for: {scanName}
       </Typography>
+
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        {summaryItems.map((item) => (
+          <Grid item xs={6} sm={3} key={item.label}>
+            <Card sx={{ textAlign: 'center', borderRadius: 2 }}>
+              <CardContent>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  {item.label}
+                </Typography>
+                <Typography variant="h5" fontWeight={700}>{item.value}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
 
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={tabValue} onChange={handleTabChange} aria-label="scan detail tabs">
@@ -325,8 +379,17 @@ function ScanDetail() {
                     <TableCell component="th" scope="row">
                       {vuln.info.name}
                     </TableCell>
-                    <TableCell>{vuln.info.severity}</TableCell>
-                    <TableCell>{vuln['matched-at']}</TableCell>
+                    <TableCell>
+                      <Chip size="small" label={vuln.info.severity} color={getSeverityColor(vuln.info.severity)} />
+                    </TableCell>
+                    <TableCell>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body2">{vuln['matched-at']}</Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Template: {vuln['template-id']}
+                        </Typography>
+                      </Stack>
+                    </TableCell>
                     <TableCell>{vuln['template-id']}</TableCell>
                   </TableRow>
                 ))}
@@ -484,7 +547,7 @@ function ScanDetail() {
           </TableContainer>
         )}
       </TabPanel>
-    </Box>
+    </Container>
   );
 }
 

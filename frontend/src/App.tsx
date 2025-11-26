@@ -1,6 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Container, Typography, List, ListItem, ListItemText, Box, CircularProgress, AppBar, Toolbar, Button, ThemeProvider, CssBaseline } from '@mui/material';
+import Grid from '@mui/material/GridLegacy';
+import {
+  Typography,
+  Box,
+  AppBar,
+  Toolbar,
+  Button,
+  ThemeProvider,
+  CssBaseline,
+  Container,
+  Card,
+  CardActionArea,
+  CardContent,
+  Skeleton,
+  Divider,
+  Stack,
+} from '@mui/material';
 import { fetchScans } from './services/api';
 import ScanDetail from './pages/ScanDetail'; // Import the new component
 import theme from './theme'; // Import the new theme
@@ -26,43 +42,80 @@ function App() {
   }, []);
 
   const HomePage = () => {
-    if (loading) {
-      return (
-        <Box sx={{ textAlign: 'center', p: 4 }}>
-          <CircularProgress />
-          <Typography variant="h6" sx={{ mt: 2 }}>Loading Scans...</Typography>
-        </Box>
-      );
-    }
-
     if (error) {
       return (
-        <Box sx={{ textAlign: 'center', p: 4 }}>
-          <Typography variant="h6" color="error">{error}</Typography>
-        </Box>
+        <Container maxWidth="lg" sx={{ py: 6 }}>
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h6" color="error">{error}</Typography>
+          </Box>
+        </Container>
       );
     }
 
     return (
-      <Box sx={{ p: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          ReconFTW Visualizer
-        </Typography>
-        <Typography variant="h5" component="h2" gutterBottom>
-          Available Scans
-        </Typography>
-        {scans.length === 0 ? (
-          <Typography variant="body1">No scans found. Please ensure your Recon directory contains scan results.</Typography>
-        ) : (
-          <List>
-            {scans.map((scan) => (
-              <ListItem key={scan} button component={Link} to={`/scan/${scan}`}>
-                <ListItemText primary={scan} />
-              </ListItem>
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+        <Box
+          sx={{
+            p: { xs: 3, md: 5 },
+            background: 'linear-gradient(135deg, rgba(25,118,210,0.1), rgba(25,118,210,0.03))',
+            borderRadius: 3,
+            border: '1px solid',
+            borderColor: 'divider',
+            mb: 4,
+          }}
+        >
+          <Stack spacing={2}>
+            <Typography variant="h3" component="h1" fontWeight={700}>
+              ReconFTW Visualizer
+            </Typography>
+            <Typography variant="h6" color="text.secondary" maxWidth="md">
+              Explore completed ReconFTW runs, review discovered assets, and jump straight into the details that matter.
+            </Typography>
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="subtitle1" color="text.secondary">
+              {loading ? 'Loading scans…' : `${scans.length} scan${scans.length === 1 ? '' : 's'} found`}
+            </Typography>
+          </Stack>
+        </Box>
+
+        {loading ? (
+          <Grid container spacing={3}>
+            {[1, 2, 3].map((placeholder) => (
+              <Grid item xs={12} sm={6} md={4} key={placeholder}>
+                <Card sx={{ height: '100%' }}>
+                  <CardContent>
+                    <Skeleton variant="text" width="60%" sx={{ mb: 1 }} />
+                    <Skeleton variant="text" width="80%" />
+                  </CardContent>
+                </Card>
+              </Grid>
             ))}
-          </List>
+          </Grid>
+        ) : scans.length === 0 ? (
+          <Box sx={{ textAlign: 'center', py: 6 }}>
+            <Typography variant="body1">No scans found. Ensure your Recon directory contains completed scan results.</Typography>
+          </Box>
+        ) : (
+          <Grid container spacing={3}>
+            {scans.map((scan) => (
+              <Grid item xs={12} sm={6} md={4} key={scan}>
+                <Card sx={{ height: '100%' }}>
+                  <CardActionArea component={Link} to={`/scan/${scan}`} sx={{ height: '100%' }}>
+                    <CardContent>
+                      <Typography variant="h6" component="div" gutterBottom>
+                        {scan}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Open this scan to view hosts, subdomains, vulnerabilities, OSINT findings, and port data.
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
+                </Card>
+              </Grid>
+            ))}
+          </Grid>
         )}
-      </Box>
+      </Container>
     );
   };
 
