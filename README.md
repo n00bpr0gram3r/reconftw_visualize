@@ -19,7 +19,7 @@ To set up `reconftw_visualize`, follow these general steps. Specific instruction
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/your-username/reconftw_visualize.git
+    git clone https://github.com/n00bpr0gram3r/reconftw_visualize.git
     cd reconftw_visualize
     ```
 
