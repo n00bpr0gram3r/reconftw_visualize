@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import {
   Typography,
   Box,

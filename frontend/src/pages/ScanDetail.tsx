@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, type ReactNode, type SyntheticEvent } from 'react';
 import { useParams } from 'react-router-dom';
-import Grid from '@mui/material/GridLegacy';
+import Grid from '@mui/material/Grid';
 import {
   Container,
   Typography,
@@ -212,6 +212,19 @@ function ScanDetail() {
     getScanDetails();
   }, [scanName]);
 
+  const summaryItems = useMemo(() => {
+    const safeHosts = hosts || [];
+    const safeSubdomains = subdomains || [];
+    const safeVulnerabilities = vulnerabilities || [];
+    const safePorts = ports || [];
+    return [
+      { label: 'Hosts', value: safeHosts.length },
+      { label: 'Subdomains', value: safeSubdomains.length },
+      { label: 'Vulnerabilities', value: safeVulnerabilities.length },
+      { label: 'Ports', value: safePorts.length },
+    ];
+  }, [hosts, subdomains, vulnerabilities, ports]);
+
   if (loading) {
     return (
       <Box sx={{ p: 4, textAlign: 'center' }}>
@@ -229,12 +242,6 @@ function ScanDetail() {
     );
   }
 
-  const summaryItems = useMemo(() => ([
-    { label: 'Hosts', value: hosts.length },
-    { label: 'Subdomains', value: subdomains.length },
-    { label: 'Vulnerabilities', value: vulnerabilities.length },
-    { label: 'Ports', value: ports.length },
-  ]), [hosts.length, subdomains.length, vulnerabilities.length, ports.length]);
 
   return (
     <Container maxWidth="lg" sx={{ py: 5 }}>
