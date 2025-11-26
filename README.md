@@ -26,7 +26,7 @@ To set up `reconftw_visualize`, follow these general steps. Specific instruction
 2.  **Frontend Setup**:
     - Navigate to the `frontend/` directory:
       ```bash
-      cd frontend
+      cd backend
       ```
     - Install frontend dependencies (e.g., Node.js and npm/yarn are required):
       ```bash
